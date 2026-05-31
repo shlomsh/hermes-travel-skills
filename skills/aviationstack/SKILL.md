@@ -25,6 +25,15 @@ have to ask the user for it.
 | luggage / baggage belt | `flight <IATA>` → `arrival.baggage` (belt number) |
 | delay / on time | `flight <IATA>` → `departure.delay` (0 = on time ✓) |
 
+## Example questions
+
+| You ask | You run |
+|---|---|
+| "Which baggage belt is the luggage from flight LY574 coming out on?" | `flight LY574` → `arrival.baggage` |
+| "Is flight IZ212 departing on time, or is it delayed?" | `flight IZ212` → `departure.delay` (0 = on time ✓) |
+| "Where do I pick up my bags — which carousel?" | `flight <IATA>` → `arrival.baggage` |
+| "Has flight AA100 landed yet?" | `flight AA100` → status + `arrival.actual` |
+
 ## Usage
 
 ```bash

@@ -20,6 +20,7 @@
 
 - [Why these exist — the reasoning](#why-these-exist--the-reasoning)
 - [The skills](#the-skills)
+- [Use cases — what you actually ask the agent](#use-cases--what-you-actually-ask-the-agent)
 - [Getting the API keys](#getting-the-api-keys)
 - [Installing into Hermes — step by step](#installing-into-hermes--step-by-step)
 - [FAQ](#faq)
@@ -96,6 +97,40 @@ python live_flight_tracker.py flight LY8                       # today only on t
 python live_flight_tracker.py airport TLV dep
 python live_flight_tracker.py airport MIA arr active
 ```
+
+---
+
+## Use cases — what you actually ask the agent
+
+You don't type commands at the agent; you ask in plain language and Hermes picks the right skill and arguments for you. Real examples:
+
+### Live flight status (`aviationstack`)
+
+| You ask | The agent runs | What it reads back |
+|---|---|---|
+| "Which baggage belt is the luggage from flight **LY574** coming out on?" | `flight LY574` | `arrival.baggage` → the carousel/belt number |
+| "Is my flight **IZ212** departing on time, or is it delayed?" | `flight IZ212` | `departure.delay` → `0` = on time ✓, otherwise the delay in minutes |
+| "Where do I pick up my bags — which carousel?" *(flight known from context)* | `flight <IATA>` | `arrival.baggage` |
+| "Has flight **AA100** landed yet?" | `flight AA100` | flight status + `arrival.actual` (actual landing time) |
+| "What gate and terminal does **LY8** leave from?" | `flight LY8` | `departure.terminal` and `departure.gate` |
+
+> The agent resolves the flight number from context (your itinerary, a forwarded confirmation, a ticket screenshot), so you rarely have to spell out the IATA code. Remember the free tier is **same-day only** — ask on the day of travel.
+
+### Places & recommendations (`google_places`)
+
+| You ask | The agent runs |
+|---|---|
+| "Find a great coffee place open right now near Times Square." | `search "top rated coffee around Times Square" --open` |
+| "Recommend a highly-rated steakhouse in New York." | `search "popular steak house in New York" --min-rating 4.5` |
+| "Any good cafés within walking distance of Williamsburg?" | `nearby "Williamsburg Brooklyn" 800 cafe --open` |
+| "Tell me more about this place — hours and reviews." | `details <place_id>` |
+
+### Weather (`google_weather`)
+
+| You ask | The agent runs |
+|---|---|
+| "Do I need an umbrella in Las Vegas today?" | `lookup "Las Vegas"` |
+| "How warm is it in Yosemite right now — should I pack a coat?" | `lookup "Yosemite"` |
 
 ---
 

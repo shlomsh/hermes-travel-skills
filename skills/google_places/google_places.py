@@ -111,6 +111,7 @@ def _print_place(i, p):
     summary = p.get("editorialSummary", {}).get("text", "")
     open_now = _open_now(p)
     today = _today_hours(p)
+    reviews = p.get("reviews", [])
 
     header = f"{i}. {name}"
     if ptype:
@@ -132,11 +133,21 @@ def _print_place(i, p):
     if website:
         print(f"   Website: {website}")
     print(f"   Google Maps: {maps_uri}")
+    if reviews:
+        print(f"   Top Reviews:")
+        for r in reviews[:3]:
+            author = r.get("authorAttribution", {}).get("displayName", "Anonymous")
+            rr = r.get("rating", "")
+            text = r.get("text", {}).get("text", "")
+            stars = f"{'★' * int(rr)}{'☆' * (5 - int(rr))}" if rr else ""
+            if text:
+                snippet = text[:150].replace("\n", " ")
+                print(f"     [{author}] {stars} \"{snippet}{'…' if len(text) > 150 else ''}\"")
     print(f"   place_id: {pid}   (use: details {pid})")
     print()
 
 
-def cmd_search(query, open_now=False, min_rating=None, top=None):
+def cmd_search(query, open_now=False, min_rating=None, top=None, with_reviews=False):
     """Text search — handles natural-language queries with implicit location.
     e.g. 'top rated coffee around Times Square', 'popular steak house in NYC'."""
     payload = {"textQuery": query}
@@ -154,8 +165,10 @@ def cmd_search(query, open_now=False, min_rating=None, top=None):
         filters.append(f"rating ≥ {min_rating}")
     suffix = f"  [{', '.join(filters)}]" if filters else ""
 
+    mask = LIST_FIELDS + ",places.reviews" if with_reviews else LIST_FIELDS
+
     try:
-        result = _post(f"{PLACES_BASE}:searchText", payload, LIST_FIELDS)
+        result = _post(f"{PLACES_BASE}:searchText", payload, mask)
         places = result.get("places", [])
         if not places:
             print(f"No results for '{query}'{suffix}.")
@@ -167,7 +180,7 @@ def cmd_search(query, open_now=False, min_rating=None, top=None):
         print(f"API request failed: {e}")
 
 
-def cmd_nearby(lat, lng, radius, types=None, open_now=False, top=None):
+def cmd_nearby(lat, lng, radius, types=None, open_now=False, top=None, with_reviews=False):
     """Nearby search ranked by POPULARITY (top-rated/popular first).
     open-now is filtered client-side (the API has no openNow request filter)."""
     payload = {
@@ -184,8 +197,10 @@ def cmd_nearby(lat, lng, radius, types=None, open_now=False, top=None):
     if top is not None:
         payload["maxResultCount"] = top
 
+    mask = LIST_FIELDS + ",places.reviews" if with_reviews else LIST_FIELDS
+
     try:
-        result = _post(f"{PLACES_BASE}:searchNearby", payload, LIST_FIELDS)
+        result = _post(f"{PLACES_BASE}:searchNearby", payload, mask)
         places = result.get("places", [])
         if open_now:
             places = [p for p in places if _open_now(p) is True]
@@ -264,14 +279,16 @@ def cmd_details(place_id):
 
 
 def _parse_flags(args):
-    """Extract --open, --min-rating X, --top N from args; return (positionals, opts)."""
-    opts = {"open_now": False, "min_rating": None, "top": None}
+    """Extract --open, --reviews, --min-rating X, --top N from args; return (positionals, opts)."""
+    opts = {"open_now": False, "min_rating": None, "top": None, "with_reviews": False}
     pos = []
     i = 0
     while i < len(args):
         a = args[i]
         if a == "--open":
             opts["open_now"] = True
+        elif a == "--reviews":
+            opts["with_reviews"] = True
         elif a == "--min-rating" and i + 1 < len(args):
             opts["min_rating"] = float(args[i + 1]); i += 1
         elif a == "--top" and i + 1 < len(args):
@@ -285,14 +302,14 @@ def _parse_flags(args):
 def _usage():
     print(
         "Usage:\n"
-        '  python google_places.py search "<natural language query>" [--open] [--min-rating X] [--top N]\n'
-        "  python google_places.py nearby <lat lng | \"location name\"> <radius_m> [type1,type2] [--open] [--top N]\n"
+        '  python google_places.py search "<natural language query>" [--open] [--reviews] [--min-rating X] [--top N]\n'
+        "  python google_places.py nearby <lat lng | \"location name\"> <radius_m> [type1,type2] [--open] [--reviews] [--top N]\n"
         "  python google_places.py details <place_id>\n"
         "\nExamples:\n"
         '  python google_places.py search "top rated coffee around Times Square" --open\n'
-        '  python google_places.py search "popular steak house in New York" --min-rating 4.5\n'
+        '  python google_places.py search "popular steak house in New York" --min-rating 4.5 --reviews\n'
         '  python google_places.py search "trendy donut shops in Miami"\n'
-        '  python google_places.py nearby "Williamsburg Brooklyn" 800 cafe --open\n'
+        '  python google_places.py nearby "Williamsburg Brooklyn" 800 cafe --open --reviews\n'
         "  python google_places.py nearby 40.758 -73.985 600 restaurant,cafe --open\n"
         "  python google_places.py details ChIJN1t_tDeuEmsRUsoyG83frY4"
     )
@@ -312,7 +329,7 @@ def main():
             print("Error: search requires a query.")
             _usage()
             return
-        cmd_search(" ".join(pos), opts["open_now"], opts["min_rating"], opts["top"])
+        cmd_search(" ".join(pos), opts["open_now"], opts["min_rating"], opts["top"], opts["with_reviews"])
 
     elif cmd == "nearby":
         # Two forms:
@@ -334,7 +351,7 @@ def main():
                 print(f"Error: {e}")
                 return
             types = pos[2].split(",") if len(pos) >= 3 else None
-        cmd_nearby(lat, lng, radius, types, opts["open_now"], opts["top"])
+        cmd_nearby(lat, lng, radius, types, opts["open_now"], opts["top"], opts["with_reviews"])
 
     elif cmd == "details":
         if not pos:

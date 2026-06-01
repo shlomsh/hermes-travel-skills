@@ -14,18 +14,24 @@ Live discovery engine for places.
 ## Work Efficiently (Orchestration)
 
 To provide the best latency and efficiency, use the API's native ranking instead of manual list building. Follow this pattern:
-1. **Discovery (`search`)**: Run ONE `search` command using `--top N` to fetch the best candidates based on the user's intent.
-2. **Deep Dive (`details`)**: Run `details <place_id>` on the top choices to pull specific review snippets or deeper insights. You can fetch details for multiple places if needed to give a great recommendation.
+1. Always run `python /data/.hermes/skills/travel/google_places/google_places.py --help` if you are unsure of the command syntax.
+2. To save I/O roundtrips, you can append `--reviews` and `--top <N>` to your `search` and `nearby` commands. This fetches the top N places and prints their reviews all in a single command, eliminating the need to call `details` for each place individually.
+3. Use the `--open` flag if the user asks for places open *right now*.
+4. **CRITICAL RULE:** Do NOT attempt to read, debug, or reverse-engineer the `google_places.py` source code. You are a user of this script, not its developer. If a place is missing reviews or detailed summaries, simply use its `rating`, `userRatingCount`, and `editorialSummary` to justify why it's a great pick, and move on.
 
-### Multi-shot Orchestration Example (Always Provide 3 Options)
-To ensure you can present exactly 3 high-quality options to the user, you MUST query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.
+### Orchestration Example (Always Provide 3 Options)
+To ensure you can present exactly 3 high-quality options to the user, query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.
 
+To save I/O roundtrips, you can use `--reviews` to get everything in one shot:
 ```bash
-# Step 1: User asks for trendy cafes in Brooklyn. Run one search to discover them, using a buffer.
-python google_places.py search "trendy cafes in Brooklyn" --top 5
-# (Returns 5 places with their place_ids)
+# One-Shot: Fetch 5 places AND their top reviews instantly
+python google_places.py search "trendy cafes in Brooklyn" --top 5 --reviews
+```
 
-# Step 2: Fetch details for the top recommendations to get review insights.
+Alternatively, if you need a deeper dive into a specific place:
+```bash
+# Multi-Shot: Discover first, then fetch deeper details
+python google_places.py search "trendy cafes in Brooklyn" --top 5
 python google_places.py details ChIJ_1234567890
 python google_places.py details ChIJ_0987654321
 ```
@@ -39,10 +45,10 @@ Do not just search for a generic category (like "restaurant"). The Places API is
 Map the user's ask straight to a query:
 ```bash
 # "top rated coffee around times square, open now"
-python google_places.py search "top rated coffee around Times Square" --open
+python google_places.py search "top rated coffee around Times Square" --open --top 3 --reviews
 
 # "popular steak house in new york"
-python google_places.py search "popular steak house in New York" --min-rating 4.5
+python google_places.py search "popular steak house in New York" --min-rating 4.5 --top 5 --reviews
 ```
 
 ## `nearby`

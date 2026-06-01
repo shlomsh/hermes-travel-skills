@@ -1,7 +1,7 @@
 ---
 name: google_places
-description: "Find places via Google Places API (New): top-rated & open-now restaurants, cafés, attractions, with live ratings, hours, reviews, and Google Maps links."
-version: 3.0.0
+description: "Google Places API: discovery engine for restaurants/attractions. Live ratings, reviews, open status, maps links."
+version: 3.2.0
 author: shlomsh
 tags: [travel, places, maps, local-search]
 platforms: [linux, macos, windows]
@@ -9,50 +9,48 @@ platforms: [linux, macos, windows]
 
 # Google Places
 
-Live place recommendations with real ratings, open-now status, and tappable Maps links. Reach for this whenever the user asks about a place to eat, drink, or visit — the API beats memory because results are current.
+Live discovery engine for places. 
 
-## Primary command: `search`
-Pass the user's request as a natural-language query — it already understands location and intent. This is the command you'll use ~90% of the time.
+## Work Efficiently (Orchestration)
 
+To provide the best latency and efficiency, use the API's native ranking instead of manual list building. Follow this pattern:
+1. **Discovery (`search`)**: Run ONE `search` command using `--top N` to fetch the best candidates based on the user's intent.
+2. **Deep Dive (`details`)**: Run `details <place_id>` on the top choices to pull specific review snippets or deeper insights. You can fetch details for multiple places if needed to give a great recommendation.
+
+### Multi-shot Orchestration Example
 ```bash
-python google_places.py search "<query>" [--open] [--min-rating X] [--top N]
+# Step 1: User asks for trendy cafes in Brooklyn. Run one search to discover them.
+python google_places.py search "trendy cafes in Brooklyn" --top 3
+# (Returns 3 places with their place_ids)
+
+# Step 2: Fetch details for the top recommendations to get review insights.
+python google_places.py details ChIJ_1234567890
+python google_places.py details ChIJ_0987654321
 ```
 
-| Flag | Effect |
-|---|---|
-| `--open` | only places open right now |
-| `--min-rating X` | only places rated ≥ X (e.g. 4.5) |
-| `--top N` | cap to N results (default ~10) |
+### Formatting the Best Search Query
+Do not just search for a generic category (like "restaurant"). The Places API is a semantic engine. **Always inject qualitative modifiers and specific locations** directly into the `<query>` string to let Google do the heavy lifting on ranking.
+* **Good Query:** `"top rated kid friendly Italian restaurants in Times Square"`
+* **Bad Query:** `"Italian restaurant"` (too broad, leaves the ranking to chance)
 
-**Examples — map the user's ask straight to a query:**
+## Examples / Use Cases
+Map the user's ask straight to a query:
 ```bash
-# "recommended coffee around times square, open now"
+# "top rated coffee around times square, open now"
 python google_places.py search "top rated coffee around Times Square" --open
 
 # "popular steak house in new york"
 python google_places.py search "popular steak house in New York" --min-rating 4.5
-
-# "trendy donut shops in miami"
-python google_places.py search "trendy donut shops in Miami" --top 5
-```
-Put quality words ("top rated", "popular", "best", "trendy") right in the query — Google ranks on them.
-
-## `details` — deep dive on one place
-Every `search`/`nearby` result prints a `place_id`. Feed it here for full weekly hours, coordinates, and top user reviews.
-```bash
-python google_places.py details <place_id>
 ```
 
-## `nearby` — strict radius around an anchor
-Ranked by **popularity** (top-rated/popular first), bounded to a hard radius — use it for "within X meters of here." Accepts a **place/area name** (auto-resolved to coordinates) *or* raw lat/lng.
+## `nearby`
+Strict radius bounded search. Prefer `search` generally, use `nearby` only when strict distance bounds matter.
 ```bash
 python google_places.py nearby <"location name" | lat lng> <radius_m> [type1,type2] [--open] [--top N]
-# by name:        python google_places.py nearby "Williamsburg Brooklyn" 800 cafe --open
-# by coordinates: python google_places.py nearby 40.758 -73.985 600 restaurant,cafe --open
 ```
-Prefer `search` for general "in Miami / around Times Square" asks; reach for `nearby` only when a tight distance bound matters (e.g. walking distance from the hotel).
 
-## Reading the output
-Each result gives: name + type, 🟢 OPEN NOW / 🔴 CLOSED, editorial summary, address, rating + review count, price level, today's hours, website, **Google Maps link**, and a `place_id`.
-
-When replying in WhatsApp: lead with the top 2–3, mention the rating + review count and whether it's open now, and **always include the Google Maps link** so the user can tap to navigate or save.
+## Output Formatting for the User
+When giving the end recommendation, you MUST include:
+1. **Rating & Number of Reviewers**.
+2. **Review Insights**: Summarize what people are saying based on the `reviews` (e.g., special dishes, service quality, vibe).
+3. **Google Maps Link**: Always provide the tappable link for navigation.

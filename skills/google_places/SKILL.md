@@ -17,11 +17,13 @@ To provide the best latency and efficiency, use the API's native ranking instead
 1. **Discovery (`search`)**: Run ONE `search` command using `--top N` to fetch the best candidates based on the user's intent.
 2. **Deep Dive (`details`)**: Run `details <place_id>` on the top choices to pull specific review snippets or deeper insights. You can fetch details for multiple places if needed to give a great recommendation.
 
-### Multi-shot Orchestration Example
+### Multi-shot Orchestration Example (Always Provide 3 Options)
+To ensure you can present exactly 3 high-quality options to the user, you MUST query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.
+
 ```bash
-# Step 1: User asks for trendy cafes in Brooklyn. Run one search to discover them.
-python google_places.py search "trendy cafes in Brooklyn" --top 3
-# (Returns 3 places with their place_ids)
+# Step 1: User asks for trendy cafes in Brooklyn. Run one search to discover them, using a buffer.
+python google_places.py search "trendy cafes in Brooklyn" --top 5
+# (Returns 5 places with their place_ids)
 
 # Step 2: Fetch details for the top recommendations to get review insights.
 python google_places.py details ChIJ_1234567890
@@ -50,7 +52,7 @@ python google_places.py nearby <"location name" | lat lng> <radius_m> [type1,typ
 ```
 
 ## Output Formatting for the User
-When giving the end recommendation, you MUST include:
+You MUST present exactly 3 high-quality options to the user. When giving the end recommendation, each option MUST include:
 1. **Rating & Number of Reviewers**.
 2. **Review Insights**: Summarize what people are saying based on the `reviews` (e.g., special dishes, service quality, vibe).
 3. **Google Maps Link**: Always provide the tappable link for navigation.

@@ -13,14 +13,24 @@ Live discovery engine for places.
 
 ## Work Efficiently (Orchestration)
 
-To provide the best latency and efficiency, use the API's native ranking instead of manual list building. Follow this pattern:
-1. Available flags for `search`:
+You must adapt your usage of this skill based on your assigned Execution Flavor:
+
+**Flavor: ONLINE (Low Latency / Minimum Steps)**
+1. Plan your execution to meet the exact request in the **absolute minimum number of steps**.
+2. Craft the perfect `search` query on the first try.
+3. Use `--top N` (e.g. `--top 10`) to fetch a large enough buffer of results so you can filter and pick the best options locally.
+4. **Do NOT run the `details` command.** The `search` command already provides the `editorialSummary` and ratings, so running `details` in an online context wastes API tokens and latency.
+
+**Flavor: RESEARCH (Deep Dive / Thorough)**
+1. You may execute multiple `search` queries to compare different areas or keywords.
+2. You may use the `details` command if you need exhaustive information (like full reviews or extensive opening hours) not covered by the `search` summary.
+
+Available flags for `search`:
    - `--open`: Use if the user asks for places open *right now*.
    - `--min-rating X`: E.g. `--min-rating 4.5`
-   - `--top N`: E.g. `--top 5` to fetch multiple options in one command.
-2. The `search` command already outputs the `editorialSummary` and rating data for each place. Do NOT run the `details` command unless absolutely necessary.
+   - `--top N`: E.g. `--top 5`
 
-### Orchestration Example (Always Provide 3 Options)
+### Orchestration Example
 To ensure you can present exactly 3 high-quality options, query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.
 
 ```bash

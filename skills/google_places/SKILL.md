@@ -17,7 +17,7 @@ To provide the best latency and efficiency, use the API's native ranking instead
 1. Always run `python /data/.hermes/skills/travel/google_places/google_places.py --help` if you are unsure of the command syntax.
 2. To save I/O roundtrips, you can append `--reviews` and `--top <N>` to your `search` and `nearby` commands. This fetches the top N places and prints their reviews all in a single command, eliminating the need to call `details` for each place individually.
 3. Use the `--open` flag if the user asks for places open *right now*.
-4. **CRITICAL RULE:** Do NOT attempt to read, debug, or reverse-engineer the `google_places.py` source code. You are a user of this script, not its developer. If a place is missing reviews or detailed summaries, simply use its `rating`, `userRatingCount`, and `editorialSummary` to justify why it's a great pick, and move on.
+4. If a place is missing reviews or detailed summaries, simply use its `rating`, `userRatingCount`, and `editorialSummary` to justify why it's a great pick, and move on.
 
 ### Orchestration Example (Always Provide 3 Options)
 To ensure you can present exactly 3 high-quality options to the user, query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.

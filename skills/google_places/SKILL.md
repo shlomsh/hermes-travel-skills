@@ -14,10 +14,11 @@ Live discovery engine for places.
 ## Work Efficiently (Orchestration)
 
 To provide the best latency and efficiency, use the API's native ranking instead of manual list building. Follow this pattern:
-1. Always run `python /data/.hermes/skills/travel/google_places/google_places.py --help` if you are unsure of the command syntax.
+1. Available flags for `search`:
+   - `--open`: Use if the user asks for places open *right now*.
+   - `--min-rating X`: E.g. `--min-rating 4.5`
+   - `--top N`: E.g. `--top 5` to fetch multiple options in one command.
 2. The `search` command already outputs the `editorialSummary` and rating data for each place. Do NOT run the `details` command unless absolutely necessary.
-3. Use the `--open` flag if the user asks for places open *right now*.
-4. Use `--top <N>` to fetch multiple options in one command.
 
 ### Orchestration Example (Always Provide 3 Options)
 To ensure you can present exactly 3 high-quality options, query a buffer of places (e.g. `--top 5`) so you still have 3 valid choices even if some are closed or poorly rated.

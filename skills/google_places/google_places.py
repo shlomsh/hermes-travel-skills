@@ -354,7 +354,7 @@ def main():
         cmd_nearby(lat, lng, radius, types, opts["open_now"], opts["top"], opts["with_reviews"])
 
     elif cmd == "details":
-        if not pos:
+        if not pos or pos[0] in ("-h", "--help", "help"):
             print("Error: details requires a place_id.")
             _usage()
             return

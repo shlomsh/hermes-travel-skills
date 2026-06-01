@@ -329,7 +329,7 @@ def main():
             print("Error: search requires a query.")
             _usage()
             return
-        cmd_search(" ".join(pos), opts["open_now"], opts["min_rating"], opts["top"], opts["with_reviews"])
+        cmd_search(" ".join(pos), opts["open_now"], opts["min_rating"], opts["top"])
 
     elif cmd == "nearby":
         # Two forms:

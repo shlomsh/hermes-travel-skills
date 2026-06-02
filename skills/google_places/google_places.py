@@ -279,16 +279,14 @@ def cmd_details(place_id):
 
 
 def _parse_flags(args):
-    """Extract --open, --open, --min-rating X, --top N from args; return (positionals, opts)."""
-    opts = {"open_now": False, "min_rating": None, "top": None, "with_reviews": False}
+    """Extract --open, --min-rating X, --top N from args; return (positionals, opts)."""
+    opts = {"open_now": False, "min_rating": None, "top": None}
     pos = []
     i = 0
     while i < len(args):
         a = args[i]
         if a == "--open":
             opts["open_now"] = True
-        elif a == "--open":
-            opts["with_reviews"] = True
         elif a == "--min-rating" and i + 1 < len(args):
             opts["min_rating"] = float(args[i + 1]); i += 1
         elif a == "--top" and i + 1 < len(args):
@@ -302,14 +300,14 @@ def _parse_flags(args):
 def _usage():
     print(
         "Usage:\n"
-        '  python google_places.py search "<natural language query>" [--open] [--open] [--min-rating X] [--top N]\n'
-        "  python google_places.py nearby <lat lng | \"location name\"> <radius_m> [type1,type2] [--open] [--open] [--top N]\n"
+        '  python google_places.py search "<natural language query>" [--open] [--min-rating X] [--top N]\n'
+        "  python google_places.py nearby <lat lng | \"location name\"> <radius_m> [type1,type2] [--open] [--top N]\n"
         "  python google_places.py details <place_id>\n"
         "\nExamples:\n"
         '  python google_places.py search "top rated coffee around Times Square" --open\n'
         '  python google_places.py search "popular steak house in New York" --min-rating 4.5 --open\n'
         '  python google_places.py search "trendy donut shops in Miami"\n'
-        '  python google_places.py nearby "Williamsburg Brooklyn" 800 cafe --open --open\n'
+        '  python google_places.py nearby "Williamsburg Brooklyn" 800 cafe --open\n'
         "  python google_places.py nearby 40.758 -73.985 600 restaurant,cafe --open\n"
         "  python google_places.py details ChIJN1t_tDeuEmsRUsoyG83frY4"
     )
@@ -351,7 +349,7 @@ def main():
                 print(f"Error: {e}")
                 return
             types = pos[2].split(",") if len(pos) >= 3 else None
-        cmd_nearby(lat, lng, radius, types, opts["open_now"], opts["top"], opts["with_reviews"])
+        cmd_nearby(lat, lng, radius, types, opts["open_now"], opts["top"])
 
     elif cmd == "details":
         if not pos or pos[0] in ("-h", "--help", "help"):
